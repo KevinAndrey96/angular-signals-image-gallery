@@ -1,0 +1,12 @@
+services:
+  web:
+    build: .
+    image: angular-signals-image-gallery
+    ports:
+      - '8080:8080'
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped

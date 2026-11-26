@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Verifies a running container: bin/smoke-test [base-url]
+set -euo pipefail
+
+BASE_URL="${1:-http://localhost:8080}"
+failures=0
+
+check() {
+  local description="$1"
+  shift
+  if "$@" >/dev/null 2>&1; then
+    printf 'ok    %s\n' "$description"
+  else
+    printf 'FAIL  %s\n' "$description"
+    failures=$((failures + 1))
+  fi
+}
+
+status_of() {
+  curl -s -o /dev/null -w '%{http_code}' "$BASE_URL$1" || true
+}
+
+headers_of() {
+  curl -s -D - -o /dev/null "$BASE_URL$1" || true
+}
+
+for attempt in $(seq 1 30); do
+  [[ "$(status_of /healthz)" == "200" ]] && break
+  if ((attempt == 30)); then
+    printf 'FAIL  %s did not become healthy\n' "$BASE_URL"
+    exit 1
+  fi
+  sleep 1
+done
+
+index="$(curl -s "$BASE_URL/" || true)"
+index_headers="$(headers_of /)"
+main_bundle="$(grep -oE 'main-[A-Z0-9]{8}\.js' <<<"$index" | head -n 1 || true)"
+
+check "health endpoint answers ok" grep -qx ok <<<"$(curl -s "$BASE_URL/healthz")"
+check "index serves the Spanish application shell" grep -q '<html lang="es"' <<<"$index"
+check "index mounts the root component" grep -q '<app-root' <<<"$index"
+check "index is revalidated on every visit" grep -qi '^cache-control: no-cache' <<<"$index_headers"
+check "CSP forbids framing" grep -qi "frame-ancestors 'none'" <<<"$index_headers"
+check "CSP only allows images from Picsum" grep -qi 'img-src .*https://fastly.picsum.photos' <<<"$index_headers"
+check "CSP forbids inline scripts" grep -qiE "script-src 'self';" <<<"$index_headers"
+check "nosniff header is present" grep -qi '^x-content-type-options: nosniff' <<<"$index_headers"
+check "server version is hidden" bash -c "! grep -qiE '^server: nginx/[0-9]' <<<\"\$1\"" _ "$index_headers"
+check "deep links fall back to the shell" test "$(status_of '/coleccion?tag=water&photo=15')" = 200
+check "hashed bundle is referenced" test -n "$main_bundle"
+check "hashed bundle is cached as immutable" grep -qi 'immutable' <<<"$(headers_of "/$main_bundle")"
+check "missing assets return 404" test "$(status_of /missing-ABCDEFGH.js)" = 404
+
+if ((failures > 0)); then
+  printf '\n%d check(s) failed\n' "$failures"
+  exit 1
+fi
+printf '\nall checks passed\n'
