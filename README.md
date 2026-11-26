@@ -34,7 +34,7 @@ docker compose up --build
 # http://localhost:8080
 ```
 
-Con Node.js 24 (o 22.22.3 o superior):
+Con Node.js 26 (también sirven 24.15 o 22.22.3 en adelante):
 
 ```bash
 npm ci
