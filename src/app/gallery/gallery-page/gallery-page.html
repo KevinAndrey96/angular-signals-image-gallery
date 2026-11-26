@@ -1,0 +1,65 @@
+<section class="filters" aria-label="Filtros">
+  <label class="search">
+    <span class="visually-hidden">Buscar fotos</span>
+    <input
+      #search
+      type="search"
+      name="q"
+      placeholder="Buscar por título, autor o etiqueta"
+      autocomplete="off"
+      enterkeyhint="search"
+      [value]="query()"
+      (input)="onSearch(search.value)"
+    />
+  </label>
+
+  <div class="chips" role="group" aria-label="Filtrar por etiqueta">
+    <button
+      type="button"
+      class="chip"
+      [attr.aria-pressed]="activeTag() === null"
+      (click)="selectTag(null)"
+    >
+      Todas
+    </button>
+    @for (tag of tags(); track tag.id) {
+      <button
+        type="button"
+        class="chip"
+        [attr.aria-pressed]="activeTag() === tag.id"
+        [disabled]="tag.count === 0 && activeTag() !== tag.id"
+        (click)="selectTag(tag.id)"
+      >
+        {{ tag.label }} <span class="count">{{ tag.count }}</span>
+      </button>
+    }
+  </div>
+</section>
+
+<p class="summary" role="status">{{ summary() }}</p>
+
+@if (visible().length > 0) {
+  <ul class="grid">
+    @for (photo of visible(); track photo.id) {
+      <li>
+        <app-photo-card [photo]="photo" [priority]="isPriority(photo)" (opened)="open($event)" />
+      </li>
+    }
+  </ul>
+} @else {
+  <div class="empty">
+    <p>Prueba con otra búsqueda o quita los filtros.</p>
+    <button type="button" class="chip" (click)="clearFilters()">Quitar filtros</button>
+  </div>
+}
+
+@if (selected(); as photo) {
+  <app-lightbox
+    [photo]="photo"
+    [position]="selectedIndex() + 1"
+    [total]="visible().length"
+    (closed)="close()"
+    (previous)="step(-1)"
+    (next)="step(1)"
+  />
+}

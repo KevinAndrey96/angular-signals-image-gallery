@@ -1,0 +1,67 @@
+<dialog
+  #dialog
+  class="lightbox"
+  aria-labelledby="lightbox-title"
+  tabindex="-1"
+  (cancel)="onCancel($event)"
+  (click)="onBackdropClick($event)"
+  (keydown)="onKeydown($event)"
+>
+  <div class="frame">
+    <header class="toolbar">
+      <p class="counter">{{ position() }} de {{ total() }}</p>
+      <button
+        type="button"
+        class="icon-button"
+        aria-label="Cerrar"
+        autofocus
+        (click)="closed.emit()"
+      >
+        <span aria-hidden="true">&#x2715;</span>
+      </button>
+    </header>
+
+    @for (frame of frames(); track frame.photo.id) {
+      <figure>
+        <div class="stage">
+          <img
+            [ngSrc]="frame.photo.id.toString()"
+            [width]="frame.photo.width"
+            [height]="frame.photo.height"
+            [loaderParams]="frame.loaderParams"
+            sizes="94vw"
+            priority
+            [alt]="frame.photo.description"
+          />
+        </div>
+        <figcaption>
+          <h2 id="lightbox-title">{{ frame.photo.title }}</h2>
+          <p class="description">{{ frame.photo.description }}</p>
+          <p class="credit">
+            Foto de
+            <a [href]="frame.photo.sourceUrl" target="_blank" rel="noopener noreferrer">{{
+              frame.photo.author
+            }}</a>
+            en Unsplash
+          </p>
+        </figcaption>
+      </figure>
+    }
+
+    @if (hasSiblings()) {
+      <nav class="pager" aria-label="Navegación entre fotos">
+        <button
+          type="button"
+          class="icon-button"
+          aria-label="Foto anterior"
+          (click)="previous.emit()"
+        >
+          <span aria-hidden="true">&#x2039;</span>
+        </button>
+        <button type="button" class="icon-button" aria-label="Foto siguiente" (click)="next.emit()">
+          <span aria-hidden="true">&#x203A;</span>
+        </button>
+      </nav>
+    }
+  </div>
+</dialog>

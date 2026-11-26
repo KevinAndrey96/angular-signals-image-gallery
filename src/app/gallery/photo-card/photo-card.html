@@ -1,0 +1,25 @@
+<button
+  #button
+  type="button"
+  class="card"
+  [attr.aria-label]="'Ampliar ' + photo().title"
+  (click)="opened.emit(photo())"
+>
+  <img
+    [ngSrc]="photo().id.toString()"
+    width="600"
+    height="400"
+    sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 33vw"
+    [priority]="priority()"
+    [alt]="photo().description"
+  />
+  <span class="caption">
+    <span class="title">{{ photo().title }}</span>
+    <span class="author">{{ photo().author }}</span>
+  </span>
+  <span class="tags">
+    @for (tag of photo().tags; track tag) {
+      <span class="tag">{{ tagLabel(tag) }}</span>
+    }
+  </span>
+</button>
