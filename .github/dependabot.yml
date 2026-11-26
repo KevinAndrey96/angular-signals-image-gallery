@@ -8,7 +8,7 @@ updates:
     ignore:
       # Angular 22 supports TypeScript ~6.0 only; majors arrive with Angular updates.
       - dependency-name: typescript
-        update-types: ["version-update:semver-major"]
+        update-types: ['version-update:semver-major']
     groups:
       angular:
         patterns:
